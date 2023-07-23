@@ -1,7 +1,7 @@
 module "eks" {
   source          = "terraform-aws-modules/eks/aws"
   cluster_name    = local.cluster_name
-  cluster_version = "1.20"
+  cluster_version = "1.26"
   subnets         = module.vpc.private_subnets
 
   tags = {
@@ -16,22 +16,18 @@ module "eks" {
     root_volume_type = "gp2"
   }
 
-  worker_groups = [
-    {
-      name                          = "worker-group-1"
-      instance_type                 = "t2.small"
-      additional_userdata           = "echo foo bar"
-      asg_desired_capacity          = 2
-      additional_security_group_ids = [aws_security_group.worker_group_mgmt_one.id]
-    },
-    # {
-    #   name                          = "worker-group-2"
-    #   instance_type                 = "t2.medium"
-    #   additional_userdata           = "echo foo bar"
-    #   additional_security_group_ids = [aws_security_group.worker_group_mgmt_two.id]
-    #   asg_desired_capacity          = 1
-    # },
-  ]
+  eks_managed_node_groups = {
+    blue = {}
+    green = {
+      min_size     = 3
+      max_size     = 5
+      desired_size = 3
+
+      instance_types = ["t2.micro"]
+      cluster_additional_security_group_ids = [aws_security_group.worker_group_mgmt_one.id]
+      capacity_type  = "SPOT"
+    }
+  }
 }
 
 data "aws_eks_cluster" "cluster" {
