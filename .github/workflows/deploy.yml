@@ -33,5 +33,5 @@ jobs:
         run: pwd
       - name: deploy nginx to eks group 13
         run: |
-          cd app
+          cd app/
           kubectl apply -f app-deploy-nginx.yaml -n ${{ env.namespaces }}
