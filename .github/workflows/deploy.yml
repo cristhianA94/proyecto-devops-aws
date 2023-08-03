@@ -29,6 +29,8 @@ jobs:
           aws-region: us-east-2
       - name: Update kubeconfig
         run: aws eks update-kubeconfig --name ${{ env.cluster }} --region us-east-2
+      - name: PWD
+        run: pwd
       - name: deploy nginx to eks group 13
         run: |
           cd app
