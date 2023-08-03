@@ -31,4 +31,5 @@ jobs:
         run: aws eks update-kubeconfig --name ${{ env.cluster }} --region us-east-2
       - name: deploy nginx to eks group 13
         run: |
+          cd ../../app
           kubectl apply -f app-deploy-nginx.yaml -n ${{ env.namespaces }}
