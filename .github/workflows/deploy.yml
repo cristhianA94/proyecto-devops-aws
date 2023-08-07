@@ -12,7 +12,7 @@ jobs:
   deploy:
     runs-on: ubuntu-latest
     env:
-      cluster: "eks-mundos-e-grupo-13"
+      cluster: "eks-mundos-e-group-13"
       namespaces: "deploy"
 
     steps:
@@ -29,8 +29,6 @@ jobs:
           aws-region: us-east-2
       - name: Update kubeconfig
         run: aws eks update-kubeconfig --name ${{ env.cluster }} --region us-east-2
-      - name: PWD
-        run: pwd
-      - name: deploy nginx to eks group 13
+      - name: Deploy nginx in eks, group 13
         run: |
           kubectl apply -f app-deploy-nginx.yaml -n ${{ env.namespaces }}
