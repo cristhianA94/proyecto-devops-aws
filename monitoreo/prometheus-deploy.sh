@@ -1,38 +1,25 @@
-# Instalar Prometheus y Grafana usnado Helm (Manejador de paquetes para kubernetes)
-
 # Agregar repo de prometheus
 helm repo add prometheus-community https://prometheus-community.github.io/helm-charts
 
-# Agregar repo de grafana
-helm repo add grafana https://grafana.github.io/helm-charts
+# Crear namespace para pods de Prometheus
+kubectl create namespace prometheus
 
-# Descargar repositorio oficial Prometheus
-git clone https://github.com/prometheus-operator/kube-prometheus.git
-cd kube-prometheus
+# Instalar Prometheus con helm
+helm upgrade -i prometheus prometheus-community/prometheus \
+    --namespace prometheus \
+    --set alertmanager.persistentVolume.storageClass="gp2",server.persistentVolume.storageClass="gp2"
 
-# Instala Prometheus
-kubectl apply --server-side -f manifests/setup
-kubectl wait \
-	--for condition=Established \
-	--all CustomResourceDefinition \
-	--namespace=monitoring
-kubectl apply -f manifests/
+#Add IAM Role usando eksctl
+eksctl create iamserviceaccount \
+    --name ebs-csi-controller-sa \
+    --namespace kube-system \
+    --cluster eks-mundos-e-group-13 \
+    --role-name AmazonEKS_EBS_CSI_DriverRole \
+    --role-only \
+    --attach-policy-arn arn:aws:iam::aws:policy/service-role/AmazonEBSCSIDriverPolicy \
+    --approve
 
-# Crear namespace de monitorización
-kubectl get ns monitoring
-kubectl create -f manifests/
-kubectl get pods -n monitoring -w
-
-kubectl port-forward -n monitoring svc/grafana 3000
-
-# Desplegar prometheus en EKS
-helm install prometheus prometheus-community/prometheus \
---namespace monitoring \
---set alertmanager.persistentVolume.storageClass="gp2" \
---set server.persistentVolume.storageClass="gp2"
-
-# Verificar la instalación
-kubectl get all -n monitoring
-
-# Exponer prometheus en la instancia de EC2 en el puerto 8080
-kubectl port-forward -n monitoring deploy/prometheus-server 8080:9090 --address 0.0.0.0
+# A continuación, añada EBS CSI a eks ejecutando el siguiente comando
+eksctl create addon --name aws-ebs-csi-driver --cluster eks-mundos-e-group-13 --service-account-role-arn arn:aws:iam::265198653890:role/AmazonEKS_EBS_CSI_DriverRole --force
+# Conectarse al pod
+kubectl port-forward -n prometheus pod/prometheus-server-8486b7c658-85jw9 8080:9090 --address 0.0.0.0
